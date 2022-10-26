@@ -1,26 +1,60 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Dashboard } from '../screens/Dashboard';
+import { Register } from '../screens/Register';
+import { useTheme } from 'styled-components';
+import { Platform } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
-import Dashboard from '../pages/Dashboard';
-import Profile from '../pages/Profile';
-import AppointmentCreated from '../pages/AppointmentCreated';
-import CreateAppointment from '../pages/CreateAppointment';
+const { Navigator, Screen } = createBottomTabNavigator();
 
-const App = createStackNavigator();
+export function AppRoutes() {
+  const theme = useTheme();
 
-const AppRoutes: React.FC = () => (
-  <App.Navigator
-    screenOptions={{
-      headerShown: false,
-      cardStyle: { backgroundColor: '#312e38' },
-    }}
-  >
-    <App.Screen name="Dashboard" component={Dashboard} />
-    <App.Screen name="AppointmentCreated" component={AppointmentCreated} />
-    <App.Screen name="CreateAppointment" component={CreateAppointment} />
-
-    <App.Screen name="Profile" component={Profile} />
-  </App.Navigator>
-);
-
-export default AppRoutes;
+  return (
+    <Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.secundary,
+        tabBarInactiveTintColor: theme.colors.text,
+        tabBarLabelPosition: 'beside-icon',
+        tabBarStyle: {
+          height: 58,
+          paddingVertical: Platform.OS === 'ios' ? 20 : 0,
+        },
+      }}
+    >
+      <Screen
+        name="Listagem"
+        component={Dashboard}
+        options={{
+          tabBarIcon: ({ size, color }) => (
+            <MaterialIcons
+              name="format-list-bulleted"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Screen
+        name="Cadastrar"
+        component={Register}
+        options={{
+          tabBarIcon: ({ size, color }) => (
+            <MaterialIcons name="attach-money" size={size} color={color} />
+          ),
+        }}
+      />
+      <Screen
+        name="Resumo"
+        component={Dashboard}
+        options={{
+          tabBarIcon: ({ size, color }) => (
+            <MaterialIcons name="pie-chart" size={size} color={color} />
+          ),
+        }}
+      />
+    </Navigator>
+  );
+}
