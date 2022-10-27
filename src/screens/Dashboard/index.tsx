@@ -1,4 +1,7 @@
-import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert } from 'react-native';
 import { HighlightCard } from '../../components/HighlightCard';
 import {
   TrasactionsCard,
@@ -18,86 +21,203 @@ import {
   HighlightCards,
   Transactions,
   Title,
-  TransactionsList,
+  TransactionList,
   LogoutButton,
+  LoadContainer,
 } from './styles';
+
+import { useTheme } from 'styled-components';
 
 export interface DataListrProps extends TrasactionsCardProps {
   id: string;
 }
 
+interface HighlightProps {
+  amount: string;
+  lastTransaction: string;
+}
+
+interface HighlightData {
+  entries: HighlightProps;
+  cost: HighlightProps;
+  total: HighlightProps;
+}
+
 export function Dashboard() {
-  const data: DataListrProps[] = [
-    {
-      id: '1',
-      title: 'Desenvolvimento de site',
-      amount: 'R$ 12.500,00',
-      category: { name: 'Vendas', icon: 'dollar-sign' },
-      date: '12/04/2022',
-      type: 'positive',
-    },
-    {
-      id: '2',
-      title: 'Hamburgeria Pizzy',
-      amount: 'R$ 59,00',
-      category: { name: 'Alimentação', icon: 'coffee' },
-      date: '12/04/2022',
-      type: 'negative',
-    },
-    {
-      id: '3',
-      title: 'Aluguel',
-      amount: 'R$ 12.500,00',
-      category: { name: 'Aluguel', icon: 'shopping-bag' },
-      date: '12/04/2022',
-      type: 'negative',
-    },
-  ];
+  const { colors } = useTheme();
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [transaction, setTransaction] = useState<DataListrProps[]>([]);
+
+  const dataKey = '@gofinance:transactions';
+  const [higtlightData, setHigtlightData] = useState<HighlightData>(
+    {} as HighlightData
+  );
+
+  function getLastTransaction(
+    collection: DataListrProps[],
+    type: 'in' | 'out' | 'total'
+  ) {
+    const lasTransaction = new Date(
+      Math.max.apply(
+        Math,
+        collection
+          .filter((item) => item.type === type || type === 'total')
+          .map((item) => new Date(item.date).getTime())
+      )
+    );
+
+    return `${lasTransaction.getDate()} de ${lasTransaction.toLocaleString(
+      'pt-BR',
+      { month: 'long' }
+    )}`;
+  }
+
+  async function loadTransaction() {
+    let entriesTotal = 0;
+    let costTotal = 0;
+
+    const response = await AsyncStorage.getItem(dataKey);
+
+    const trasactions: DataListrProps[] = response ? JSON.parse(response) : [];
+
+    const transactionFormatted: DataListrProps[] = trasactions.map((item) => {
+      if (item.type === 'in') {
+        entriesTotal += Number(item.amount);
+      } else {
+        costTotal += Number(item.amount);
+      }
+
+      const amount = Number(item.amount).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      });
+
+      const date = Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+      }).format(new Date(item.date));
+
+      return {
+        id: item.id,
+        name: item.name,
+        amount,
+        type: item.type,
+        category: item.category,
+        date,
+      };
+    });
+
+    const entries = Number(entriesTotal).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+
+    const cost = Number(costTotal).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+
+    const total = Number(entriesTotal - costTotal).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+
+    setHigtlightData({
+      entries: {
+        amount: entries,
+        lastTransaction: `Última entrada dia ${getLastTransaction(
+          trasactions,
+          'in'
+        )}`,
+      },
+      cost: {
+        amount: cost,
+        lastTransaction: `Última saída dia ${getLastTransaction(
+          trasactions,
+          'out'
+        )}`,
+      },
+      total: {
+        amount: total,
+        lastTransaction: `01 à ${getLastTransaction(trasactions, 'total')}`,
+      },
+    });
+
+    setTransaction(transactionFormatted);
+    setIsLoading(false);
+  }
+
+  // useEffect(() => {
+  //   // AsyncStorage.removeItem('@gofinance:transactions');
+  //   loadTransaction();
+  // }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTransaction();
+    }, [])
+  );
+
+  function handleLogout() {
+    console.log('Logout');
+    Alert.alert('Logout');
+  }
 
   return (
     <Container>
-      <Header>
-        <UserWrapper>
-          <UserInfo>
-            <Photo source={{ uri: 'https://github.com/jeanp13.png' }} />
-            <User>
-              <UserGreeting>Olá,</UserGreeting>
-              <UserName>Jean</UserName>
-            </User>
-          </UserInfo>
-          <LogoutButton onPress={() => {}}>
-            <Icon name="power" />
-          </LogoutButton>
-        </UserWrapper>
-      </Header>
-      <HighlightCards>
-        <HighlightCard
-          title="Entrada"
-          amount="R$ 17.400,00"
-          lastTransaction="Última entrada dia 13 de abril"
-          type="up"
-        />
-        <HighlightCard
-          title="Saída"
-          amount="R$ 1.259,00"
-          lastTransaction="Última saída dia 13 de abril"
-          type="down"
-        />
-        <HighlightCard
-          title="Total"
-          amount="R$ 17.400,00"
-          lastTransaction="Última entrada dia 13 de abril"
-          type="total"
-        />
-      </HighlightCards>
-      <Transactions>
-        <Title>Listagem</Title>
-        <TransactionsList
-          data={data}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TrasactionsCard data={item} />}
-        />
-      </Transactions>
+      {isLoading ? (
+        <LoadContainer>
+          <ActivityIndicator color={colors.primary} />
+        </LoadContainer>
+      ) : (
+        <>
+          <Header>
+            <UserWrapper>
+              <UserInfo>
+                <Photo source={{ uri: 'https://github.com/jeanp13.png' }} />
+                <User>
+                  <UserGreeting>Olá,</UserGreeting>
+                  <UserName>Jean</UserName>
+                </User>
+              </UserInfo>
+              <LogoutButton onPress={handleLogout}>
+                <Icon name="power" />
+              </LogoutButton>
+            </UserWrapper>
+          </Header>
+          <HighlightCards>
+            <HighlightCard
+              title="Entrada"
+              amount={higtlightData.entries.amount}
+              lastTransaction={higtlightData.entries.lastTransaction}
+              type="in"
+            />
+            <HighlightCard
+              title="Saída"
+              amount={higtlightData.cost.amount}
+              lastTransaction={higtlightData.cost.lastTransaction}
+              type="out"
+            />
+            <HighlightCard
+              title="Total"
+              amount={higtlightData?.total?.amount}
+              lastTransaction={higtlightData.total.lastTransaction}
+              type="total"
+            />
+          </HighlightCards>
+          <Transactions>
+            <Title>Listagem</Title>
+            <TransactionList
+              data={transaction}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <TrasactionsCard data={item} />}
+            />
+          </Transactions>
+        </>
+      )}
     </Container>
   );
 }

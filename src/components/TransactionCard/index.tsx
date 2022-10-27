@@ -11,34 +11,33 @@ import {
   Date,
 } from './styles';
 
-interface ICategory {
-  name: string;
-  icon: string;
-}
+import { categories } from '../../utils/categories';
 
 export interface TrasactionsCardProps {
-  title: string;
+  id: string;
+  name: string;
   amount: string;
-  category: ICategory;
+  category: string;
   date: string;
-  type: 'positive' | 'negative';
+  type: 'in' | 'out';
 }
 interface Props {
   data: TrasactionsCardProps;
 }
 
 export function TrasactionsCard({ data }: Props) {
+  const category = categories.filter((item) => item.key === data.category)[0];
   return (
     <Container>
-      <Title>{data.title}</Title>
+      <Title>{data.name}</Title>
       <Amount type={data.type}>
-        {data.type === 'negative' && '- '}
+        {data.type === 'out' && '- '}
         {data.amount}
       </Amount>
       <Footer>
         <Category>
-          <Icon name={data.category.icon} />
-          <CategoryName>{data.category.name}</CategoryName>
+          <Icon name={category.icon} />
+          <CategoryName>{category.name}</CategoryName>
         </Category>
         <Date>{data.date}</Date>
       </Footer>

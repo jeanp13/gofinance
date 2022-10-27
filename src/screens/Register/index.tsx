@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import uuid from 'react-native-uuid';
+import { useNavigation } from '@react-navigation/native';
+
 import { Control, FieldValues, useForm } from 'react-hook-form';
 import { Alert, Keyboard, Modal, TouchableWithoutFeedback } from 'react-native';
 
@@ -19,6 +22,7 @@ import {
   Fields,
   TransactionTypes,
 } from './styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface FormData {
   name: string;
@@ -36,6 +40,8 @@ const schema = Yup.object()
   .required();
 
 export function Register() {
+  const navigation = useNavigation();
+
   const [category, setCategory] = useState({
     key: 'category',
     name: 'Categoria',
@@ -43,15 +49,18 @@ export function Register() {
   const [transactionType, setTransactionType] = useState('');
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
+  const dataKey = '@gofinance:transactions';
+
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormData>({ resolver: yupResolver(schema) });
 
   const formControll = control as unknown as Control<FieldValues, any>;
 
-  function handleTransactionsTypeSelect(type: 'up' | 'down') {
+  function handleTransactionsTypeSelect(type: 'in' | 'out') {
     setTransactionType(type);
   }
 
@@ -63,20 +72,54 @@ export function Register() {
     setCategoryModalOpen(true);
   }
 
-  function handleRegister(form: FormData) {
+  async function handleRegister(form: FormData) {
     if (!transactionType) return Alert.alert('Selecione o tipo da Transação');
 
     if (category.key === 'category')
       return Alert.alert('Selecione a categoria');
 
-    const data = {
+    const newTransaction = {
+      id: String(uuid.v4()),
       name: form.name,
       amount: form.amount,
       transactionType,
       category: category.key,
+      date: new Date(),
+      type: transactionType,
     };
-    console.log(data);
+
+    try {
+      const data = await AsyncStorage.getItem(dataKey);
+      const currentData = data ? JSON.parse(data) : [];
+      const dataFormatted = [...currentData, newTransaction];
+
+      await AsyncStorage.setItem(dataKey, JSON.stringify(dataFormatted));
+
+      reset();
+      setTransactionType('');
+      setCategory({
+        key: 'category',
+        name: 'Categoria',
+      });
+
+      navigation.navigate('Listagem');
+    } catch (error) {
+      console.log(error);
+      Alert.alert("'Não foi possível salvar");
+    }
   }
+
+  useEffect(() => {
+    // async function loadData() {
+    //   const data = await AsyncStorage.getItem(dataKey);
+    //   console.log(JSON.parse(data!));
+    // }
+    // async function removeAll() {
+    //   await AsyncStorage.removeItem(dataKey);
+    // }
+    // loadData();
+    //// removeAll();
+  }, []);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -104,15 +147,15 @@ export function Register() {
             <TransactionTypes>
               <TransactionTypebutton
                 title="Entrada"
-                type="up"
-                onPress={() => handleTransactionsTypeSelect('up')}
-                isActive={transactionType === 'up'}
+                type="in"
+                onPress={() => handleTransactionsTypeSelect('in')}
+                isActive={transactionType === 'in'}
               />
               <TransactionTypebutton
                 title="Saída"
-                type="down"
-                onPress={() => handleTransactionsTypeSelect('down')}
-                isActive={transactionType === 'down'}
+                type="out"
+                onPress={() => handleTransactionsTypeSelect('out')}
+                isActive={transactionType === 'out'}
               />
             </TransactionTypes>
 

@@ -3,7 +3,7 @@ import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 import { Feather } from '@expo/vector-icons';
 
 interface TrasactionType {
-  type: 'positive' | 'negative';
+  type: 'in' | 'out';
 }
 
 export const Container = styled.View`
@@ -23,7 +23,7 @@ export const Amount = styled.Text<TrasactionType>`
   font-family: ${({ theme }) => theme.fonts.regular};
   font-size: ${RFValue(20)}px;
   color: ${({ theme, type }) =>
-    type === 'positive' ? theme.colors.success : theme.colors.attention};
+    type === 'in' ? theme.colors.success : theme.colors.attention};
 `;
 
 export const Footer = styled.View`

@@ -5,13 +5,13 @@ import { Button, Container, Icon, Title } from './styles';
 
 interface Props extends RectButtonProperties {
   title: string;
-  type: 'up' | 'down';
+  type: 'in' | 'out';
   isActive: boolean;
 }
 
 const icons = {
-  up: 'arrow-up-circle',
-  down: 'arrow-down-circle',
+  in: 'arrow-up-circle',
+  out: 'arrow-down-circle',
 };
 
 export function TransactionTypebutton({
