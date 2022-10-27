@@ -78,7 +78,6 @@ export function Dashboard() {
     setIsLoading(true);
     let entriesTotal = 0;
     let costTotal = 0;
-    console.log('transactions no load', transaction);
 
     const response = await AsyncStorage.getItem(dataKey);
 
@@ -143,7 +142,6 @@ export function Dashboard() {
     });
 
     setTransaction(transactionFormatted);
-    console.log('transactions depois load', transaction);
     setIsLoading(false);
   }
 
