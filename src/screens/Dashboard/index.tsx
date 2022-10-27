@@ -28,7 +28,7 @@ import {
 
 import { useTheme } from 'styled-components';
 
-export interface DataListrProps extends TrasactionsCardProps {
+export interface DataListProps extends TrasactionsCardProps {
   id: string;
 }
 
@@ -48,7 +48,7 @@ export function Dashboard() {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const [transaction, setTransaction] = useState<DataListrProps[]>([]);
+  const [transaction, setTransaction] = useState<DataListProps[]>([]);
 
   const dataKey = '@gofinance:transactions';
   const [higtlightData, setHigtlightData] = useState<HighlightData>(
@@ -56,7 +56,7 @@ export function Dashboard() {
   );
 
   function getLastTransaction(
-    collection: DataListrProps[],
+    collection: DataListProps[],
     type: 'in' | 'out' | 'total'
   ) {
     const lasTransaction = new Date(
@@ -77,12 +77,13 @@ export function Dashboard() {
   async function loadTransaction() {
     let entriesTotal = 0;
     let costTotal = 0;
+    console.log('transactions no load', transaction);
 
     const response = await AsyncStorage.getItem(dataKey);
 
-    const trasactions: DataListrProps[] = response ? JSON.parse(response) : [];
+    const trasactions: DataListProps[] = response ? JSON.parse(response) : [];
 
-    const transactionFormatted: DataListrProps[] = trasactions.map((item) => {
+    const transactionFormatted: DataListProps[] = trasactions.map((item) => {
       if (item.type === 'in') {
         entriesTotal += Number(item.amount);
       } else {
@@ -147,12 +148,18 @@ export function Dashboard() {
     });
 
     setTransaction(transactionFormatted);
+    console.log('transactions depois load', transaction);
     setIsLoading(false);
   }
 
+  function handleLogout() {
+    console.log('Logout');
+    Alert.alert('Logout');
+  }
+
   // useEffect(() => {
-  //   // AsyncStorage.removeItem('@gofinance:transactions');
-  //   loadTransaction();
+  //// AsyncStorage.removeItem('@gofinance:transactions');
+  // loadTransaction();
   // }, []);
 
   useFocusEffect(
@@ -160,11 +167,6 @@ export function Dashboard() {
       loadTransaction();
     }, [])
   );
-
-  function handleLogout() {
-    console.log('Logout');
-    Alert.alert('Logout');
-  }
 
   return (
     <Container>

@@ -1,5 +1,5 @@
 import styled from 'styled-components/native';
-import { FlatList } from 'react-native';
+import { FlatList, FlatListProps } from 'react-native';
 import { BorderlessButton } from 'react-native-gesture-handler';
 import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 import { Feather } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import {
   getStatusBarHeight,
 } from 'react-native-iphone-x-helper';
 
-import { DataListrProps } from '.';
+import { DataListProps } from '.';
 
 export const Container = styled.View`
   flex: 1;
