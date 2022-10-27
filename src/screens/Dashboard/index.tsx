@@ -75,15 +75,16 @@ export function Dashboard() {
   }
 
   async function loadTransaction() {
+    setIsLoading(true);
     let entriesTotal = 0;
     let costTotal = 0;
     console.log('transactions no load', transaction);
 
     const response = await AsyncStorage.getItem(dataKey);
 
-    const trasactions: DataListProps[] = response ? JSON.parse(response) : [];
+    const data: DataListProps[] = response ? JSON.parse(response) : [];
 
-    const transactionFormatted: DataListProps[] = trasactions.map((item) => {
+    const transactionFormatted: DataListProps[] = data.map((item) => {
       if (item.type === 'in') {
         entriesTotal += Number(item.amount);
       } else {
@@ -129,21 +130,15 @@ export function Dashboard() {
     setHigtlightData({
       entries: {
         amount: entries,
-        lastTransaction: `Última entrada dia ${getLastTransaction(
-          trasactions,
-          'in'
-        )}`,
+        lastTransaction: `Última entrada dia ${getLastTransaction(data, 'in')}`,
       },
       cost: {
         amount: cost,
-        lastTransaction: `Última saída dia ${getLastTransaction(
-          trasactions,
-          'out'
-        )}`,
+        lastTransaction: `Última saída dia ${getLastTransaction(data, 'out')}`,
       },
       total: {
         amount: total,
-        lastTransaction: `01 à ${getLastTransaction(trasactions, 'total')}`,
+        lastTransaction: `01 à ${getLastTransaction(data, 'total')}`,
       },
     });
 
