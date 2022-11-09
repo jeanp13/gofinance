@@ -20,6 +20,7 @@ import theme from './src/global/styles/theme';
 import { AppRoutes } from './src/routes/app.routes';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
+import { SignIn } from './src/screens/SignIn';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -50,7 +51,7 @@ export default function App() {
             backgroundColor="transparent"
             translucent
           />
-          <AppRoutes />
+          <SignIn />
         </NavigationContainer>
       </ThemeProvider>
     </GestureHandlerRootView>
