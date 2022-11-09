@@ -40,7 +40,7 @@
     "fakes": "mock"
   },
   "prettier.singleQuote": true,
-  "prettier.printWidth": 50,
+  "prettier.printWidth": 60,
 
   "material-icon-theme.files.associations": {
     "ormconfig.json": "database",
