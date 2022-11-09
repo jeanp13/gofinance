@@ -6,8 +6,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { ThemeProvider } from 'styled-components';
 
-import AppLoading from 'expo-app-loading';
-
+import * as SplashScreen from 'expo-splash-screen';
+// import AppLoading from 'expo-app-loading';
 import {
   useFonts,
   Poppins_400Regular,
@@ -20,6 +20,8 @@ import theme from './src/global/styles/theme';
 import { AppRoutes } from './src/routes/app.routes';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -28,8 +30,12 @@ export default function App() {
   });
 
   if (!fontsLoaded) {
-    return <AppLoading />;
+    // return <AppLoading />;
+    return;
   }
+
+  SplashScreen.hideAsync();
+
   return (
     <GestureHandlerRootView
       style={{
