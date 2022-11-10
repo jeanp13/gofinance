@@ -1,11 +1,16 @@
-import React from 'react';
-import { Alert } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from 'react-native';
 import { RFValue } from 'react-native-responsive-fontsize';
 
 import AppleSvg from '../../assets/apple.svg';
 import GoogleSvg from '../../assets/google.svg';
 import LogoSvg from '../../assets/logo.svg';
 import { SingInSocialButton } from '../../components/SignInSocialButton';
+import theme from '../../global/styles/theme';
 import { useAuth } from '../../hooks/auth';
 
 import {
@@ -20,24 +25,30 @@ import {
 
 export function SignIn() {
   const { signInWhithGoogle, signInWhithApple } = useAuth();
+  const [isLoadding, setIsLoadding] = useState(false);
 
   async function handleSignInWithGoogle() {
     try {
-      await signInWhithGoogle();
+      setIsLoadding(true);
+      return await signInWhithGoogle();
     } catch (error) {
       console.log(error);
       Alert.alert(
         'Não foi possível acessar a conta Google'
       );
     }
+    setIsLoadding(false);
   }
+
   async function handleSignInWithApple() {
     try {
-      await signInWhithApple();
+      setIsLoadding(true);
+      return await signInWhithApple();
     } catch (error) {
       console.log(error);
       Alert.alert('Não foi possível acessar a conta Apple');
     }
+    setIsLoadding(false);
   }
 
   return (
@@ -65,12 +76,20 @@ export function SignIn() {
             svg={GoogleSvg}
             onPress={handleSignInWithGoogle}
           />
-          <SingInSocialButton
-            title="Entrar com Apple"
-            svg={AppleSvg}
-            onPress={handleSignInWithApple}
-          />
+          {Platform.OS === 'ios' && (
+            <SingInSocialButton
+              title="Entrar com Apple"
+              svg={AppleSvg}
+              onPress={handleSignInWithApple}
+            />
+          )}
         </FooterWrapper>
+        {isLoadding && (
+          <ActivityIndicator
+            color={theme.colors.shape}
+            style={{ marginTop: 18 }}
+          />
+        )}
       </Footer>
     </Container>
   );

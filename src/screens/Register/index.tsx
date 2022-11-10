@@ -1,7 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
+import React, { useEffect, useState } from 'react';
 import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 
@@ -37,6 +34,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { dataKey } from '../../utils/constants';
+import { useAuth } from '../../hooks/auth';
 interface FormData {
   name: string;
   amount: string;
@@ -44,20 +42,17 @@ interface FormData {
 
 const schema = Yup.object()
   .shape({
-    name: Yup.string().required(
-      'Nome é obrigatório'
-    ),
+    name: Yup.string().required('Nome é obrigatório'),
     amount: Yup.number()
       .typeError('Informe um valor numérico')
-      .positive(
-        'O valor não pode ser menor que zero'
-      )
+      .positive('O valor não pode ser menor que zero')
       .required('Valor é obrigatório'),
   })
   .required();
 
 export function Register() {
   const navigation = useNavigation();
+  const { user } = useAuth();
 
   const [category, setCategory] = useState({
     key: 'category',
@@ -65,10 +60,8 @@ export function Register() {
   });
   const [transactionType, setTransactionType] =
     useState('');
-  const [
-    categoryModalOpen,
-    setCategoryModalOpen,
-  ] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] =
+    useState(false);
 
   const {
     control,
@@ -79,11 +72,10 @@ export function Register() {
     resolver: yupResolver(schema),
   });
 
-  const formControll =
-    control as unknown as Control<
-      FieldValues,
-      any
-    >;
+  const formControll = control as unknown as Control<
+    FieldValues,
+    any
+  >;
 
   function handleTransactionsTypeSelect(
     type: 'in' | 'out'
@@ -101,9 +93,7 @@ export function Register() {
 
   async function handleRegister(form: FormData) {
     if (!transactionType)
-      return Alert.alert(
-        'Selecione o tipo da Transação'
-      );
+      return Alert.alert('Selecione o tipo da Transação');
 
     if (category.key === 'category')
       return Alert.alert('Selecione a categoria');
@@ -120,18 +110,16 @@ export function Register() {
 
     try {
       const data = await AsyncStorage.getItem(
-        dataKey
+        `${dataKey}:${user.id}`
       );
-      const currentData = data
-        ? JSON.parse(data)
-        : [];
+      const currentData = data ? JSON.parse(data) : [];
       const dataFormatted = [
         ...currentData,
         newTransaction,
       ];
 
       await AsyncStorage.setItem(
-        dataKey,
+        `${dataKey}:${user.id}`,
         JSON.stringify(dataFormatted)
       );
 
@@ -151,20 +139,18 @@ export function Register() {
 
   useEffect(() => {
     // async function loadData() {
-    //   const data = await AsyncStorage.getItem(dataKey);
+    //   const data = await AsyncStorage.getItem(`${dataKey}:${user.id}`);
     //   console.log(JSON.parse(data!));
     // }
     // async function removeAll() {
-    //   await AsyncStorage.removeItem(dataKey);
+    //   await AsyncStorage.removeItem(`${dataKey}:${user.id}`);
     // }
     // loadData();
     //// removeAll();
   }, []);
 
   return (
-    <TouchableWithoutFeedback
-      onPress={Keyboard.dismiss}
-    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <Container>
         <Header>
           <Title>Cadastro</Title>
@@ -177,10 +163,7 @@ export function Register() {
               control={formControll}
               autoCapitalize="sentences"
               autoCorrect={false}
-              error={
-                errors?.name &&
-                errors.name.message
-              }
+              error={errors?.name && errors.name.message}
             />
             <InputForm
               placeholder="Preço"
@@ -188,8 +171,7 @@ export function Register() {
               control={formControll}
               keyboardType="numeric"
               error={
-                errors?.amount &&
-                errors.amount.message
+                errors?.amount && errors.amount.message
               }
             />
             <TransactionTypes>
@@ -197,33 +179,23 @@ export function Register() {
                 title="Entrada"
                 type="in"
                 onPress={() =>
-                  handleTransactionsTypeSelect(
-                    'in'
-                  )
+                  handleTransactionsTypeSelect('in')
                 }
-                isActive={
-                  transactionType === 'in'
-                }
+                isActive={transactionType === 'in'}
               />
               <TransactionTypebutton
                 title="Saída"
                 type="out"
                 onPress={() =>
-                  handleTransactionsTypeSelect(
-                    'out'
-                  )
+                  handleTransactionsTypeSelect('out')
                 }
-                isActive={
-                  transactionType === 'out'
-                }
+                isActive={transactionType === 'out'}
               />
             </TransactionTypes>
 
             <CategorySelectButton
               title={category.name}
-              onPress={
-                handleOpenSelectCategoryModal
-              }
+              onPress={handleOpenSelectCategoryModal}
             />
           </Fields>
 

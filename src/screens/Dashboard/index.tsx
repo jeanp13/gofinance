@@ -57,7 +57,7 @@ interface HighlightData {
 
 export function Dashboard() {
   const { colors } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   const [transaction, setTransaction] = useState<
@@ -71,16 +71,17 @@ export function Dashboard() {
     collection: DataListProps[],
     type: 'in' | 'out' | 'total'
   ) {
-    const lasTransaction = new Date(
-      Math.max.apply(
-        Math,
-        collection
-          .filter(
-            (item) => item.type === type || type === 'total'
-          )
-          .map((item) => new Date(item.date).getTime())
+    const collectionFilttered = collection
+      .filter(
+        (item) => item.type === type || type === 'total'
       )
+      .map((item) => new Date(item.date).getTime());
+
+    const lasTransaction = new Date(
+      Math.max.apply(Math, collectionFilttered)
     );
+
+    if (collectionFilttered.length === 0) return 0;
 
     return `${lasTransaction.getDate()} de ${lasTransaction.toLocaleString(
       'pt-BR',
@@ -93,7 +94,9 @@ export function Dashboard() {
     let entriesTotal = 0;
     let costTotal = 0;
 
-    const response = await AsyncStorage.getItem(dataKey);
+    const response = await AsyncStorage.getItem(
+      `${dataKey}:${user.id}`
+    );
 
     const data: DataListProps[] = response
       ? JSON.parse(response)
@@ -152,27 +155,37 @@ export function Dashboard() {
       currency: 'BRL',
     });
 
+    const lastTransactionEntries = getLastTransaction(
+      data,
+      'in'
+    );
+    const lastTransactionCost = getLastTransaction(
+      data,
+      'out'
+    );
+    const totalInterval = `01 à ${getLastTransaction(
+      data,
+      'total'
+    )}`;
+
     setHigtlightData({
       entries: {
         amount: entries,
-        lastTransaction: `Última entrada dia ${getLastTransaction(
-          data,
-          'in'
-        )}`,
+        lastTransaction:
+          lastTransactionEntries === 0
+            ? 'Nenhuma Transação de entrada este mês'
+            : `Última entrada dia ${lastTransactionEntries}`,
       },
       cost: {
         amount: cost,
-        lastTransaction: `Última saída dia ${getLastTransaction(
-          data,
-          'out'
-        )}`,
+        lastTransaction:
+          lastTransactionCost === 0
+            ? 'Nenhuma saída este mês'
+            : `Última saída dia ${lastTransactionCost}`,
       },
       total: {
         amount: total,
-        lastTransaction: `01 à ${getLastTransaction(
-          data,
-          'total'
-        )}`,
+        lastTransaction: totalInterval,
       },
     });
 
@@ -208,12 +221,12 @@ export function Dashboard() {
               <UserInfo>
                 <Photo
                   source={{
-                    uri: 'https://github.com/jeanp13.png',
+                    uri: user.photo,
                   }}
                 />
                 <User>
                   <UserGreeting>Olá,</UserGreeting>
-                  <UserName>Jean</UserName>
+                  <UserName>{user.name}</UserName>
                 </User>
               </UserInfo>
               <LogoutButton onPress={handleLogout}>

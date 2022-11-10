@@ -30,6 +30,7 @@ import theme from '../../global/styles/theme';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '../../hooks/auth';
 
 interface TransactionData {
   name: string;
@@ -49,6 +50,7 @@ interface CategoryData {
 }
 
 export function Resume() {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
     new Date()
@@ -67,7 +69,9 @@ export function Resume() {
 
   async function loadData() {
     setIsLoading(true);
-    const response = await AsyncStorage.getItem(dataKey);
+    const response = await AsyncStorage.getItem(
+      `${dataKey}:${user.id}`
+    );
     const responseFormatted = response
       ? JSON.parse(response)
       : [];

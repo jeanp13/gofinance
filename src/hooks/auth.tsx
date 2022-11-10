@@ -32,7 +32,7 @@ interface IAuthContextData {
   user: User;
   signInWhithGoogle(): Promise<void>;
   signInWhithApple(): Promise<void>;
-  logout(): void;
+  logout(): Promise<void>;
   isLoadding: boolean;
 }
 
@@ -94,11 +94,13 @@ function AuthProvider({ children }: AuthProviderProps) {
           ],
         });
       if (credential) {
+        const name = credential.fullName!.givenName!;
+        const photo = `https://ui-avatars.com/api/?name=${name}&length=1`;
         setUser({
           id: String(credential.user),
           name: credential.fullName!.givenName!,
           email: credential.email!,
-          photo: undefined, // API ui-avatars para criar img com iniciais do nome inserido
+          photo, // API ui-avatars para criar img com iniciais do nome inserido
         });
         await AsyncStorage.setItem(
           userStorageKey,
@@ -110,11 +112,11 @@ function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  function logout() {
+  async function logout() {
     // console.log('Logout');
     // Alert.alert('Logout');
     setUser({} as User);
-    AsyncStorage.removeItem(userStorageKey);
+    await AsyncStorage.removeItem(userStorageKey);
   }
 
   useEffect(() => {
