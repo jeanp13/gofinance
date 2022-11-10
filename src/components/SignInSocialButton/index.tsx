@@ -14,7 +14,7 @@ export function SingInSocialButton({
   ...rest
 }: Props) {
   return (
-    <Button>
+    <Button {...rest}>
       <ImageContainer>
         <Svg />
       </ImageContainer>

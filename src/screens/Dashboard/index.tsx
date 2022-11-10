@@ -2,13 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useState,
 } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { ActivityIndicator, Alert } from 'react-native';
 import { HighlightCard } from '../../components/HighlightCard';
 import {
   TrasactionsCard,
@@ -35,7 +33,12 @@ import {
 
 import { useTheme } from 'styled-components';
 
-import { dataKey } from '../../utils/constants';
+import {
+  dataKey,
+  userStorageKey,
+} from '../../utils/constants';
+import { AuthContext } from '../../AuthContext';
+import { useAuth } from '../../hooks/auth';
 export interface DataListProps
   extends TrasactionsCardProps {
   id: string;
@@ -54,9 +57,8 @@ interface HighlightData {
 
 export function Dashboard() {
   const { colors } = useTheme();
-
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const { logout } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
   const [transaction, setTransaction] = useState<
     DataListProps[]
@@ -74,13 +76,9 @@ export function Dashboard() {
         Math,
         collection
           .filter(
-            (item) =>
-              item.type === type ||
-              type === 'total'
+            (item) => item.type === type || type === 'total'
           )
-          .map((item) =>
-            new Date(item.date).getTime()
-          )
+          .map((item) => new Date(item.date).getTime())
       )
     );
 
@@ -95,37 +93,33 @@ export function Dashboard() {
     let entriesTotal = 0;
     let costTotal = 0;
 
-    const response = await AsyncStorage.getItem(
-      dataKey
-    );
+    const response = await AsyncStorage.getItem(dataKey);
 
     const data: DataListProps[] = response
       ? JSON.parse(response)
       : [];
 
-    const transactionFormatted: DataListProps[] =
-      data.map((item) => {
+    const transactionFormatted: DataListProps[] = data.map(
+      (item) => {
         if (item.type === 'in') {
           entriesTotal += Number(item.amount);
         } else {
           costTotal += Number(item.amount);
         }
 
-        const amount = Number(
-          item.amount
-        ).toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-        });
-
-        const date = Intl.DateTimeFormat(
+        const amount = Number(item.amount).toLocaleString(
           'pt-BR',
           {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit',
+            style: 'currency',
+            currency: 'BRL',
           }
-        ).format(new Date(item.date));
+        );
+
+        const date = Intl.DateTimeFormat('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: '2-digit',
+        }).format(new Date(item.date));
 
         return {
           id: item.id,
@@ -135,22 +129,21 @@ export function Dashboard() {
           category: item.category,
           date,
         };
-      });
+      }
+    );
 
-    const entries = Number(
-      entriesTotal
-    ).toLocaleString('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    });
-
-    const cost = Number(costTotal).toLocaleString(
+    const entries = Number(entriesTotal).toLocaleString(
       'pt-BR',
       {
         style: 'currency',
         currency: 'BRL',
       }
     );
+
+    const cost = Number(costTotal).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
 
     const total = Number(
       entriesTotal - costTotal
@@ -188,8 +181,7 @@ export function Dashboard() {
   }
 
   function handleLogout() {
-    console.log('Logout');
-    Alert.alert('Logout');
+    logout();
   }
 
   // useEffect(() => {
@@ -207,9 +199,7 @@ export function Dashboard() {
     <Container>
       {isLoading ? (
         <LoadContainer>
-          <ActivityIndicator
-            color={colors.primary}
-          />
+          <ActivityIndicator color={colors.primary} />
         </LoadContainer>
       ) : (
         <>
@@ -222,15 +212,11 @@ export function Dashboard() {
                   }}
                 />
                 <User>
-                  <UserGreeting>
-                    Olá,
-                  </UserGreeting>
+                  <UserGreeting>Olá,</UserGreeting>
                   <UserName>Jean</UserName>
                 </User>
               </UserInfo>
-              <LogoutButton
-                onPress={handleLogout}
-              >
+              <LogoutButton onPress={handleLogout}>
                 <Icon name="power" />
               </LogoutButton>
             </UserWrapper>
@@ -238,12 +224,9 @@ export function Dashboard() {
           <HighlightCards>
             <HighlightCard
               title="Entrada"
-              amount={
-                higtlightData.entries.amount
-              }
+              amount={higtlightData.entries.amount}
               lastTransaction={
-                higtlightData.entries
-                  .lastTransaction
+                higtlightData.entries.lastTransaction
               }
               type="in"
             />
@@ -257,12 +240,9 @@ export function Dashboard() {
             />
             <HighlightCard
               title="Total"
-              amount={
-                higtlightData?.total?.amount
-              }
+              amount={higtlightData?.total?.amount}
               lastTransaction={
-                higtlightData.total
-                  .lastTransaction
+                higtlightData.total.lastTransaction
               }
               type="total"
             />
